@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"log"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/perm"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
@@ -40,6 +41,7 @@ func authzFilter(ctx context.Context, repos []*types.Repo, p perm.P) ([]*types.R
 			filteredRepos = append(filteredRepos, repo)
 		}
 	}
+	log.Printf("# filteredRepos: %+v", filteredRepos)
 	return filteredRepos, nil
 }
 

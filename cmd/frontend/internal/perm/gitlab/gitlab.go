@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"math"
 	"net/url"
 	"strconv"
@@ -125,6 +126,7 @@ func (p *GitLabAuthzProvider) RepoPerms(ctx context.Context, account *extsvc.Ext
 			perms[repo.URI] = map[perm.P]bool{}
 		}
 	}
+	log.Printf("# perms: %+v", perms)
 	return perms, nil
 }
 
@@ -261,6 +263,8 @@ func reposByMatchPattern(mt matchType, matchString string, repos map[perm.Repo]s
 // whether the cache entry exists.
 func (p *GitLabAuthzProvider) getCachedAccessList(accountID string) (map[api.RepoURI]struct{}, bool) {
 
+	return nil, false // DEBUG: disable cache
+
 	// TODO(beyang): trigger best-effort fetch in background if ttl is getting close (but avoid dup refetches)
 
 	cachedReposB, exists := p.cache.Get(accountID)
@@ -278,6 +282,11 @@ func (p *GitLabAuthzProvider) getCachedAccessList(accountID string) (map[api.Rep
 
 // fetchUserAccessList fetches the list of repositories that are readable to a user from the GitLab API.
 func (p *GitLabAuthzProvider) fetchUserAccessList(ctx context.Context, glUserID string) (map[api.RepoURI]struct{}, error) {
+	log.Printf("# fetchUserAccessList, glUserID=%s", glUserID)
+	// glUserID = "beyang"
+
+	// NEXT: why nothing returned here?
+
 	q := make(url.Values)
 	q.Add("sudo", glUserID)
 	q.Add("per_page", "100")
@@ -289,6 +298,8 @@ func (p *GitLabAuthzProvider) fetchUserAccessList(ctx context.Context, glUserID 
 		if iters >= 100 && iters%100 == 0 {
 			log15.Warn("Excessively many GitLab API requests to fetch complete user authz list", "iters", iters, "gitlabUserID", glUserID, "host", p.clientURL.String())
 		}
+
+		log.Printf("# pageURL: %s", pageURL)
 
 		projs, nextPageURL, err := p.client.ListProjects(ctx, pageURL)
 		if err != nil {
